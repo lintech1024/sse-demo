@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSE Client</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 20px;
+    }
+
+    #messages {
+      border: 1px solid #ccc;
+      padding: 20px;
+      min-height: 200px;
+      margin-top: 20px;
+      background: #f9f9f9;
+    }
+
+    .message-item {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .message-item:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>实时时间更新</h1>
+  <div id="messages"></div>
+
+  <script>
+    // 创建 EventSource 连接
+    const eventSource = new EventSource('http://localhost:8080/sse');
+
+    // 监听消息事件
+    eventSource.onmessage = function (event) {
+      const messagesContainer = document.getElementById('messages');
+
+      // 创建消息元素
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message-item';
+      messageDiv.textContent = `收到新时间：${event.data}`;
+
+      // 插入到容器顶部
+      messagesContainer.insertBefore(messageDiv, messagesContainer.firstChild);
+
+      // 保持最多显示10条消息
+      if (messagesContainer.children.length > 10) {
+        messagesContainer.removeChild(messagesContainer.lastChild);
+      }
+    };
+
+    // 连接状态处理
+    eventSource.addEventListener('open', function () {
+      console.log('连接已建立');
+    });
+
+    eventSource.addEventListener('error', function (err) {
+      console.error('连接异常:', err);
+      // 自动重连机制（原生已支持，可自定义重试逻辑）
+    });
+  </script>
+</body>

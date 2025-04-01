@@ -58,16 +58,22 @@ func sseHandler(w http.ResponseWriter, r *http.Request) {
 	manager.clients[uid] = msgChan
 	manager.mutex.Unlock()
 
+	defer func() {
+		manager.mutex.Lock()
+		close(msgChan)
+		delete(manager.clients, uid)
+		manager.mutex.Unlock()
+		log.Println("Client disconnected")
+	}()
+	
 	ctx := r.Context()
 	for {
 		select {
 		case <-ctx.Done():
-			close(msgChan)
-			delete(manager.clients, uid)
-			log.Println("Client disconnected")
 			return
 		case msg := <-msgChan:
 			message := fmt.Sprintf("data: %s\n\n", msg)
+			log.Printf("reserive message to %s: %s", uid, message)
 			if _, err := w.Write([]byte(message)); err != nil {
 				log.Printf("Write error: %v", err)
 				return

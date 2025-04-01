@@ -8,9 +8,10 @@ import (
 )
 
 func main() {
-	http.HandleFunc("/sse", sseHandler)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/sse", sseHandler)
 	log.Println("SSE server started at :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", mux))
 }
 
 func sseHandler(w http.ResponseWriter, r *http.Request) {

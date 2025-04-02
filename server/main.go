@@ -80,7 +80,7 @@ func sseHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		case msg := <-msgChan:
 			message := fmt.Sprintf("data: %s\n\n", msg)
-			log.Printf("reserive message to %s: %s", uid, message)
+			log.Printf("receive message to %s: %s", uid, message)
 			if _, err := w.Write([]byte(message)); err != nil {
 				log.Printf("Write error: %v", err)
 				return

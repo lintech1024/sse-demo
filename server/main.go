@@ -32,10 +32,17 @@ func sendHandler(w http.ResponseWriter, r *http.Request) {
 	manager.mutex.RLock()
 	defer manager.mutex.RUnlock()
 
-	if msgChan, ok := manager.clients[uid]; ok {
-		msgChan <- []byte(message)
-	} else {
+	msgChan, ok := manager.clients[uid]
+	if !ok {
 		http.Error(w, "Client not found", http.StatusNotFound)
+		return
+	}
+	select {
+	case msgChan <- []byte(message):
+		log.Printf("Message sent to %s", uid)
+	default:
+		log.Printf("System busy: %s", uid)
+		http.Error(w, "System busy", http.StatusTooManyRequests)
 	}
 }
 
@@ -65,7 +72,7 @@ func sseHandler(w http.ResponseWriter, r *http.Request) {
 		manager.mutex.Unlock()
 		log.Println("Client disconnected")
 	}()
-	
+
 	ctx := r.Context()
 	for {
 		select {

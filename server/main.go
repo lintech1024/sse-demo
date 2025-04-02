@@ -80,6 +80,11 @@ func sendHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Missing user ID or group ID", http.StatusBadRequest)
 		return
 	}
+	msg := r.URL.Query().Get("msg")
+	if msg == "" {
+		http.Error(w, "Missing message", http.StatusBadRequest)
+		return
+	}
 	manager.groupMutex.RLock()
 	defer manager.groupMutex.RUnlock()
 	if _, ok := manager.groups[gid]; !ok {
@@ -88,11 +93,6 @@ func sendHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(manager.groups[gid]) == 0 {
 		http.Error(w, "Group is empty", http.StatusNotFound)
-		return
-	}
-	msg := r.URL.Query().Get("msg")
-	if msg == "" {
-		http.Error(w, "Missing message", http.StatusBadRequest)
 		return
 	}
 	log.Printf("Send message to group %s: %s", gid, msg)
